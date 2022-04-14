@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PurchaseMapper">
+
+	
+	<resultMap type="purchase" id="purchaseSelectMap">
+		<result property="tranNo" column="tran_no" jdbcType="NUMERIC" />
+		<result property="paymentOption" column="payment_option" jdbcType="VARCHAR"/>
+		<result property="receiverName" column="receiver_name" jdbcType="VARCHAR" />
+		<result property="receiverPhone" column="receiver_phone" jdbcType="VARCHAR" />
+		<result property="divyAddr" column="demailaddr" jdbcType="VARCHAR" />
+		<result property="divyRequest" column="dlvy_request" jdbcType="VARCHAR" />
+		<result property="tranCode" column="tran_status_code" jdbcType="VARCHAR" />	
+		<result property="orderDate" column="order_data" jdbcType="DATE" />	
+		<result property="divyDate" column="dlvy_date" jdbcType="DATE" />
+		<result property="purchaseStock" column="purchase_stock" jdbcType="NUMERIC" />
+		
+		<association property="buyer" javaType="User">
+			<result property="userId" 			column="user_id" 			jdbcType="VARCHAR"/>
+			<result property="userName"	column="user_name" 		jdbcType="VARCHAR" />
+			<result property="password" 	column="password" 		jdbcType="VARCHAR" />
+			<result property="role" 				column="role" 					jdbcType="VARCHAR" />
+			<result property="ssn" 				column="ssn" 					jdbcType="VARCHAR" />
+			<result property="phone" 			column="cell_phone" 		jdbcType="VARCHAR" />
+			<result property="addr" 				column="addr" 					jdbcType="VARCHAR" />
+			<result property="email" 			column="email" 				jdbcType="NUMERIC"  />
+			<result property="regDate" 		column="reg_date" 			jdbcType="DATE" />
+		</association>
+		
+		<association property="purchaseProd" javaType="Product">
+		    <id property="prodNo" column="prod_no"/>
+		    <result property="prodNo" column="prod_no" jdbcType="NUMERIC" />
+			<result property="prodName" column="prod_name" jdbcType="VARCHAR" />
+			<result property="price" column="price" jdbcType="NUMERIC" />
+			<result property="prodDetail" column="prod_detail" jdbcType="VARCHAR" />
+			<result property="manuDate" column="manufacture_day" jdbcType="VARCHAR" />
+			<result property="fileName" column="image_file" jdbcType="VARCHAR" />
+			<result property="regDate" column="reg_date" jdbcType="DATE" />
+			<result property="checkB" column="checkB" jdbcType="VARCHAR" />
+			<result property="stock" column="stock" jdbcType="NUMERIC" />
+			<result property="review" column="review" jdbcType="VARCHAR" />
+		</association>
+	</resultMap>
+	
+	
+	
+	<!-- INSERT -->
+	<insert id="addPurchase" parameterType="purchase">
+		INSERT
+		INTO transaction
+		VALUES((seq_transaction_tran_no.NEXTVAL),#{purchaseProd.prodNo},#{buyer.userId},#{paymentOption:VARCHAR},#{receiverName:VARCHAR},
+				#{receiverPhone:VARCHAR},#{divyAddr:VARCHAR},#{divyRequest:VARCHAR},#{tranCode},SYSDATE,#{divyDate:DATE},#{purchaseStock})
+	</insert>
+	
+	<!-- SELECT ONE -->
+	<select id="getPurchase" parameterType="int" resultMap="purchaseSelectMap">
+		SELECT *
+		FROM product p, transaction t,users u
+		WHERE p.prod_no=t.prod_no AND t.buyer_id=u.user_id AND t.tran_no =#{tranNo}
+	</select>
+	
+	<!-- UPDATE Purchase -->
+	<update id="updatePurchase" parameterType="purchase">
+		UPDATE transaction
+		<set>
+			payment_option =#{paymentOption:VARCHAR},
+			receiver_name=#{receiverName:VARCHAR},
+			receiver_phone=#{receiverPhone:VARCHAR},
+			demailaddr=#{divyAddr:VARCHAR},
+			dlvy_request=#{divyRequest:VARCHAR},
+			dlvy_date=#{divyDate:DATE}
+		</set>
+		WHERE tran_no = #{tranNo}
+	</update>
+	
+	<!-- UPDATE TranCode -->
+	<update id="updateTranCode" parameterType="purchase">
+		UPDATE transaction
+		<set>
+			tran_status_code=#{tranCode}
+		</set>
+		WHERE tran_no=#{tranNo}
+	</update>
+	
+	<!-- LIST Purchase -->
+	<select id="getPurchaseList" resultMap="purchaseSelectMap" parameterType="map">
+		SELECT *
+		FROM	(SELECT inner_table.*, ROWNUM AS row_seq
+				FROM	(SELECT t.*,p.image_file ,p.prod_name,s.checkB
+							FROM transaction t, product p, starNum s
+							WHERE t.prod_no=p.prod_no AND s.prod_no(+)=p.prod_no AND t.buyer_id = #{value}
+							<if test="search.searchCondition !=null">
+								<if test="search.searchCondition==0 and search.searchKeyword !='' ">
+									AND p.prod_no=#{search.searchKeyword}
+								</if>
+								<if test="search.searchCondition==1 and search.searchKeyword !='' ">
+									AND p.prod_name LIKE #{search.searchKeyword}
+								</if>
+							</if>
+							ORDER BY t.prod_no)inner_table
+				WHERE ROWNUM &lt;= #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}		
+	</select>
+	
+	<!-- SELECT SALE LIST -->
+	<select id="getSaleList" resultMap="purchaseSelectMap" parameterType="map">
+		SELECT *
+		FROM	(SELECT inner_table.*, ROWNUM AS row_seq
+				FROM	(SELECT t.*, p.prod_name,manufacture_day
+							FROM product p, transaction t
+							WHERE p.prod_no=t.prod_no
+							<if test="searchCondition !=null">
+								<if test="searchCondition==1 and searchKeyword !='' ">
+									AND p.prod_no=#{searchKeyword}
+								</if>
+								<if test="searchCondition==2 and searchKeyword !='' ">
+									AND p.prod_name LIKE #{searchKeyword}
+								</if>
+							</if>
+							<choose>
+								<when test="searchValue==0">
+									ORDER BY p.prod_no
+								</when>
+								<when test="searchValue==1">
+									ORDER BY prod_name
+								</when>
+								<when test="searchValue==2">
+									ORDER BY price
+								</when>
+								<when test="searchValue==3">
+									ORDER BY reg_date
+								</when>
+								<when test="searchValue==4">
+									ORDER BY stock DESC
+								</when>
+							</choose>)inner_table
+				WHERE ROWNUM &lt;= #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}		
+	</select>
+	
+	<!-- ROW SaleCount -->
+	<select id="getTotalSaleCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+		FROM(SELECT t.*, p.prod_name,manufacture_day
+			FROM product p, transaction t
+			WHERE p.prod_no=t.prod_no
+			<if test="search.searchCondition !=null">
+				<if test="search.searchCondition==1 and search.searchKeyword !='' ">
+					AND p.prod_no=#{search.searchKeyword}
+				</if>
+				<if test="search.searchCondition==2 and search.searchKeyword !='' ">
+					AND p.prod_name LIKE #{search.searchKeyword}
+				</if>
+			</if>
+			ORDER BY t.prod_no ) countTable
+	</select>
+	
+	
+	<!-- ROW Count -->
+	<select id="getTotalCount" resultType="int" parameterType="map">
+		SELECT COUNT(*)
+		FROM(SELECT t.*,p.image_file ,p.prod_name,s.checkB
+			FROM transaction t, product p, starNum s
+			WHERE t.prod_no=p.prod_no AND s.prod_no(+)=p.prod_no AND t.buyer_id = #{value}
+			<if test="search.searchCondition !=null">
+				<if test="search.searchCondition==0 and search.searchKeyword !='' ">
+					AND p.prod_no=#{search.searchKeyword}
+				</if>
+				<if test="search.searchCondition==1 and search.searchKeyword !='' ">
+					AND p.prod_name LIKE #{search.searchKeyword}
+				</if>
+			</if>
+			ORDER BY t.prod_no ) countTable
+	</select>
+</mapper>

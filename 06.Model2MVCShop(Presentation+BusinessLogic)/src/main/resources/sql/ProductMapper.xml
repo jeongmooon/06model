@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ProductMapper">
+
+	<resultMap id="productSelectMap" type="product">
+		<result property="prodNo" column="prod_no" jdbcType="NUMERIC" />
+		<result property="prodName" column="prod_name" jdbcType="VARCHAR" />
+		<result property="price" column="price" jdbcType="NUMERIC" />
+		<result property="prodDetail" column="prod_detail" jdbcType="VARCHAR" />
+		<result property="manuDate" column="manufacture_day" jdbcType="VARCHAR" />
+		<result property="fileName" column="image_file" jdbcType="VARCHAR" />
+		<result property="regDate" column="reg_date" jdbcType="DATE" />
+		<result property="checkB" column="checkB" jdbcType="CHAR" />
+		<result property="stock" column="stock" jdbcType="NUMERIC" />
+		<association property="star" javaType="StarNum">
+			<result property="score" column="sorce" jdbcType="NUMERIC" />
+			<result property="userId" column="buyer_id" jdbcType="VARCHAR"/>
+			<result property="review" column="review" jdbcType="VARCHAR"/>
+		</association>
+	</resultMap>
+	
+	<!-- INSERT -->
+	<insert id="addProduct" parameterType="product">
+		INSERT
+		INTO product
+		VALUES((seq_product_prod_no.NEXTVAL), #{prodName:VARCHAR},#{prodDetail:VARCHAR},#{manuDate:VARCHAR},#{price:NUMERIC},#{fileName:VARCHAR},SYSDATE)
+	</insert>
+	
+	<!-- SELECT ONE -->
+	<select id="getProduct" parameterType="int" resultMap="productSelectMap">
+		SELECT p.*,NVL(s.checkB,0),s.review, NVL(stock,0) stock
+		FROM product p, starNum s,product_stock ps
+		WHERE p.prod_no=s.prod_no(+) AND p.prod_no=ps.prod_no(+) AND p.prod_no= #{value}
+	</select>
+	
+	<!-- UPDATE -->
+	<update id="updateProduct" parameterType="product">
+		UPDATE product
+		<set>
+			prod_name=#{prodName:VARCHAR},
+			prod_detail=#{prodDetail:VARCHAR},
+			manufacture_day =#{manuDate:VARCHAR},
+			price = #{price:NUMERIC},
+			image_file=#{fileName:VARCHAR}
+		</set>
+		WHERE prod_no = #{prodNo}
+	</update>
+	
+	<!-- SELECT LIST -->
+	<select id="getProductList" parameterType="map" resultMap="productSelectMap">
+		SELECT *
+		FROM	(SELECT inner_table.*, ROWNUM AS row_seq
+				FROM	(SELECT p.prod_no,prod_name,price,reg_date,image_file, stock
+						FROM product p, product_stock ps 
+						WHERE p.prod_no=ps.prod_no(+)
+						<if test="search.searchCondition !=null">
+							<if test="search.searchCondition==1 and search.searchKeyword !='' ">
+								AND p.prod_no=#{search.searchKeyword}
+							</if>
+							<if test="search.searchCondition==2 and search.searchKeyword !='' ">
+								AND p.prod_name LIKE #{search.searchKeyword}
+							</if>
+							<if test="search.searchCondition==3 and search.searchValue==5 and search.searchKeyword !='' ">
+								AND price BETWEEN #{rowPrice} AND #{highPrice}
+							</if>
+						</if>
+						<choose>
+							<when test="search.searchValue==0">
+								ORDER BY p.prod_no
+							</when>
+							<when test="search.searchValue==1">
+								ORDER BY prod_name
+							</when>
+							<when test="search.searchValue==2">
+								ORDER BY price
+							</when>
+							<when test="search.searchValue==3">
+								ORDER BY reg_date
+							</when>
+							<when test="search.searchValue==4">
+								ORDER BY stock DESC
+							</when>
+						</choose> )inner_table
+				WHERE ROWNUM &lt;= #{search.endRowNum})
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+	</select>	
+	
+	<!-- ROW Count -->
+	<select id="getTotalCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+	  	FROM(	SELECT p.prod_no,prod_name,price,reg_date,image_file, stock
+						FROM product p, product_stock ps 
+						WHERE p.prod_no=ps.prod_no(+)
+						<if test="search.searchCondition !=null">
+							<if test="search.searchCondition==1 and search.searchKeyword !='' ">
+								AND p.prod_no=#{search.searchKeyword}
+							</if>
+							<if test="search.searchCondition==2 and search.searchKeyword !='' ">
+								AND p.prod_name LIKE #{search.searchKeyword}
+							</if>
+							<if test="search.searchCondition==3 and search.searchValue==5 and search.searchKeyword !='' ">
+								AND price BETWEEN #{rowPrice} AND #{highPrice}
+							</if>
+						</if> ) countTable
+	</select>
+</mapper>
