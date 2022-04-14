@@ -45,7 +45,7 @@ public class ProdcutDaoImpl implements ProductDao {
 		// TODO Auto-generated method stub
 		Map<String,Object> map = new HashMap<String,Object>();
 		System.out.println(search.getSearchValue());
-		if(search.getSearchValue().equals("5,0")) {
+		if(search.getSearchValue().equals("5,0") || search.getSearchValue().equals("5")) {
 			search.setSearchValue("5");
 			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"+search.getSearchKeyword().split(",")[0]);
 			map.put("rowPrice", new Integer(search.getSearchKeyword().split(",")[0]));

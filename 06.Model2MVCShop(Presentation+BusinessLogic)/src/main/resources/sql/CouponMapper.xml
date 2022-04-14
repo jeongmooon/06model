@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CouponMapper">
+	<resultMap type="coupon" id="couponSelectMap">
+		<result property="couponNo" column="coupon_no" jdbcType="NUMERIC"/>
+		<result property="userId" column="buyer_id" jdbcType="VARCHAR"/>
+		<result property="salePercent" column="sale_percent" jdbcType="VARCHAR"/>
+		<result property="useCheck" column="use_check" jdbcType="VARCHAR"/>
+		<result property="eventNum" column="event_num" jdbcType="VARCHAR"/>
+		<result property="dueDate" column="due_date" jdbcType="DATE"/>
+	</resultMap>
+	
+	<!-- INSERT -->
+	<insert id="addCoupon" parameterType="coupon">
+		INSERT
+		INTO coupon
+		VALUES(seq_coupon_coupon_no.NEXTVAL,#{userId:VARCHAR},#{salePercent:VARCHAR},#{userCheck:VARCHAR},#{eventNum:VARCHAR},SYSDATE);
+	</insert>
+	
+	<!-- UPDATE -->
+	<update id="updateCoupon" parameterType="coupon">
+		UPDATE coupon
+		<set>
+			use_check =#{userCheck}
+		</set>
+		WHERE coupon_no = #{couponNo}
+	</update>
+	
+	<!-- SELECT -->
+	<select id="getCoupon" resultMap="couponSelectMap" parameterType="string">
+		SELECT *
+		FROM coupon
+		WHERE buyer_id = #{value}
+	</select>
+</mapper>

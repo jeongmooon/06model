@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.model2.mvc.common.Search;
+import com.model2.mvc.service.coupon.CouponDao;
+import com.model2.mvc.service.domain.Coupon;
 import com.model2.mvc.service.domain.User;
 import com.model2.mvc.service.user.UserService;
 import com.model2.mvc.service.user.UserDao;;
@@ -22,6 +24,11 @@ public class UserServiceImpl implements UserService{
 	@Autowired
 	@Qualifier("userDaoImpl")
 	private UserDao userDao;
+	
+	@Autowired
+	@Qualifier("couponDaoImpl")
+	private CouponDao couponDao;
+	
 	public void setUserDao(UserDao userDao) {
 		this.userDao = userDao;
 	}
@@ -37,7 +44,11 @@ public class UserServiceImpl implements UserService{
 	}
 
 	public User getUser(String userId) throws Exception {
-		return userDao.getUser(userId);
+		User user = userDao.getUser(userId);
+		List<Coupon> cL = couponDao.getCoupon(userId);
+		user.setCoupon(cL);
+		
+		return user;
 	}
 
 	public Map<String , Object > getUserList(Search search) throws Exception {

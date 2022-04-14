@@ -1,6 +1,7 @@
 package com.model2.mvc.service.domain;
 
 import java.sql.Date;
+import java.util.List;
 
 
 //==>회원정보를 모델링(추상화/캡슐화)한 Bean
@@ -16,6 +17,7 @@ public class User {
 	private String addr;
 	private String email;
 	private Date regDate;
+	private List<Coupon> coupon;
 	/////////////// EL 적용 위해 추가된 Field ///////////
 	private String phone1;
 	private String phone2;
@@ -103,5 +105,13 @@ public class User {
 	public String toString() {
 		return "UserVO : [userId] "+userId+" [userName] "+userName+" [password] "+password+" [role] "+ role
 			+" [ssn] "+ssn+" [phone] "+phone+" [email] "+email+" [regDate] "+regDate;
+	}
+
+	public List<Coupon> getCoupon() {
+		return coupon;
+	}
+
+	public void setCoupon(List<Coupon> coupon) {
+		this.coupon = coupon;
 	}
 }

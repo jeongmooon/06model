@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StockMapper">
+	<resultMap type="product" id="productSelectMap">
+		<result property="prodNo" column="prod_no" jdbcType="NUMERIC" />
+		<result property="stock" column="sotck" jdbcType="NUMERIC" />
+	</resultMap>
+	
+	<!-- SELECT -->
+	<select id="getStockList" parameterType="list" resultMap="productSelectMap">
+		SELECT NVL(stock,0) stock
+		FROM product_stock
+		WHERE prod_no =
+			<if test="#{list.size()} != 0">
+			<foreach collection="list" item="item" separator=",">
+				<if test="#{item.size()}"></if>
+			</foreach>
+			</if>
+	</select>
+</mapper>

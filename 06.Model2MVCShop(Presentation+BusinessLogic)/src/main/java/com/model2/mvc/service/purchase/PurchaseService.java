@@ -8,6 +8,8 @@ import com.model2.mvc.service.domain.Product;
 import com.model2.mvc.service.domain.Purchase;
 
 public interface PurchaseService {
+	public Product addPurchasView(int prodNo) throws Exception;
+	
 	public void addPurchase(Purchase purchase) throws Exception;
 	
 	public Purchase getPurcahse(int tranNo) throws Exception;
